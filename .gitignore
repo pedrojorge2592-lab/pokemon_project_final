@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.swo
+*.egg-info/
+
+# Virtual envs
+.venv/
+env/
+venv/
+
+# Data & models
+data/
+mlruns/
+artifacts/
+*.pkl
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
