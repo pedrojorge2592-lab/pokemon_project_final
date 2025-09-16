@@ -1,0 +1,35 @@
+# remove "version:" (it's obsolete) at the top of the file
+
+services:
+  app:
+    build: .
+    command: >
+      bash -lc "streamlit run app.py --server.address 0.0.0.0 --server.port 8501"
+    ports: ["8501:8501"]
+    environment:
+      - MODEL_URI=${MODEL_URI}
+      - MLFLOW_TRACKING_URI=file:///app/mlruns
+    volumes: ["./:/app"]
+    restart: unless-stopped
+
+  mlflow:
+    build: .
+    command: >
+      bash -lc "mlflow ui --host 0.0.0.0 --backend-store-uri /app/mlruns"
+    ports: ["5001:5000"]
+    volumes: ["./:/app"]
+    restart: unless-stopped
+
+  jupyter:
+    build: .
+    command:
+      - bash
+      - -lc
+      - >
+        jupyter lab --ip=0.0.0.0 --port 8888 --no-browser
+        --ServerApp.token='' --ServerApp.allow_root=True
+        --ServerApp.allow_origin='*' --ServerApp.root_dir=/app
+        --ServerApp.log_level=DEBUG
+    ports: ["8890:8888"]      # open at http://localhost:8890/lab
+    volumes: ["./:/app"]
+    restart: unless-stopped
