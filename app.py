@@ -39,12 +39,15 @@ st.markdown(
 )
 
 # --- Config from env ---
-TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "file:///app/mlruns")
+
+TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "")
 EXPERIMENT_NAME = os.getenv("MODEL_EXPERIMENT", "pokemon_legendary")
 MODEL_URI = (os.getenv("MODEL_URI", "") or "").strip()
 
-# Make sure MLflow resolves to the same store the pipeline writes to
-mlflow.set_tracking_uri(TRACKING_URI)
+# Only set tracking URI if it's explicitly provided and not disabled
+if TRACKING_URI and TRACKING_URI.lower() not in {"disabled", "none"}:
+    mlflow.set_tracking_uri(TRACKING_URI)
+
 
 # ---------- SMART MODEL LOADER (drop-in replacement) ----------
 def _load_any_model(uri: str):
