@@ -3,15 +3,47 @@ import mlflow
 import streamlit as st
 import pandas as pd
 from mlflow.tracking import MlflowClient
+from pathlib import Path
+import io
+import requests
 
-LOCAL_CSV = "data/pokemon.csv"
-GITHUB_CSV = os.getenv(
+# --- CSV loader: local -> private-repo (token) -> public raw URL ---
+REPO_DIR   = Path(__file__).resolve().parent
+LOCAL_CSV  = REPO_DIR / "data" / "pokemon.csv"
+
+# If your repo is PUBLIC this raw URL will work as-is.
+# If it's PRIVATE, we'll use the GitHub API + token below.
+PUBLIC_RAW = os.getenv(
     "POKEMON_CSV_URL",
     "https://raw.githubusercontent.com/pedrojorge2592-lab/pokemon_project_final/main/data/pokemon.csv",
 )
 
-csv_path = LOCAL_CSV if os.path.exists(LOCAL_CSV) else GITHUB_CSV
-pokemon_df = pd.read_csv(csv_path)
+if LOCAL_CSV.exists():
+    pokemon_df = pd.read_csv(LOCAL_CSV)
+else:
+    token = os.getenv("GITHUB_TOKEN") or (
+        st.secrets.get("GITHUB_TOKEN") if hasattr(st, "secrets") else None
+    )
+    if token:
+        # Private repo path via GitHub API (adjust owner/repo/path if needed)
+        api = (
+            "https://api.github.com/repos/"
+            "pedrojorge2592-lab/pokemon_project_final"
+            "/contents/data/pokemon.csv?ref=main"
+        )
+        r = requests.get(
+            api,
+            headers={
+                "Authorization": f"token {token}",
+                "Accept": "application/vnd.github.raw",
+            },
+            timeout=30,
+        )
+        r.raise_for_status()
+        pokemon_df = pd.read_csv(io.StringIO(r.text))
+    else:
+        # Public repo: raw URL
+        pokemon_df = pd.read_csv(PUBLIC_RAW)
 
 
 # Optional: for single-file artifacts (.pkl)
