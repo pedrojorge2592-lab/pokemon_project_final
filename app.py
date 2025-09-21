@@ -4,6 +4,16 @@ import streamlit as st
 import pandas as pd
 from mlflow.tracking import MlflowClient
 
+LOCAL_CSV = "data/pokemon.csv"
+GITHUB_CSV = os.getenv(
+    "POKEMON_CSV_URL",
+    "https://raw.githubusercontent.com/pedrojorge2592-lab/pokemon_project_final/main/data/pokemon.csv",
+)
+
+csv_path = LOCAL_CSV if os.path.exists(LOCAL_CSV) else GITHUB_CSV
+pokemon_df = pd.read_csv(csv_path)
+
+
 # Optional: for single-file artifacts (.pkl)
 try:
     import joblib
